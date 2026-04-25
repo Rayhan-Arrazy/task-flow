@@ -4,6 +4,40 @@ import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  ArrowLeft,
+  ArrowRight,
+  Bot,
+  Sparkles,
+  Loader2,
+  Calendar,
+} from "lucide-react";
 
 interface Task {
   id: string;
@@ -26,7 +60,6 @@ export default function TasksPage() {
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: string } | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -40,18 +73,16 @@ export default function TasksPage() {
       if (search) params.set("search", search);
       const res = await fetch(`/api/tasks?${params}`);
       if (res.ok) setTasks(await res.json());
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   }, [filterPriority, filterStatus, search]);
 
   useEffect(() => {
     if (status === "authenticated") fetchTasks();
   }, [status, fetchTasks]);
-
-  const showToast = (message: string, type: string) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   const handleStatusChange = async (task: Task, newStatus: string) => {
     try {
@@ -60,221 +91,547 @@ export default function TasksPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (res.ok) { fetchTasks(); showToast("Status updated", "success"); }
-    } catch (e) { console.error(e); }
+      if (res.ok) {
+        fetchTasks();
+        toast.success("Status updated");
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this task?")) return;
     try {
       const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
-      if (res.ok) { fetchTasks(); showToast("Task deleted", "success"); }
-    } catch (e) { console.error(e); }
+      if (res.ok) {
+        fetchTasks();
+        toast.success("Task deleted");
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleSave = async (data: { title: string; description: string; priority: string; status: string; dueDate: string; useAI: boolean }) => {
+  const handleSave = async (data: {
+    title: string;
+    description: string;
+    priority: string;
+    status: string;
+    dueDate: string;
+    useAI: boolean;
+  }) => {
     try {
       const url = editingTask ? `/api/tasks/${editingTask.id}` : "/api/tasks";
       const method = editingTask ? "PATCH" : "POST";
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
       if (res.ok) {
         const result = await res.json();
         fetchTasks();
         setShowModal(false);
         setEditingTask(null);
         if (data.useAI && result.aiReasoning) {
-          showToast(`AI suggested ${result.priority} priority: ${result.aiReasoning}`, "success");
+          toast.success(
+            `AI suggested ${result.priority} priority: ${result.aiReasoning}`
+          );
         } else {
-          showToast(editingTask ? "Task updated" : "Task created", "success");
+          toast.success(editingTask ? "Task updated" : "Task created");
         }
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const groupedByStatus = {
-    TODO: tasks.filter(t => t.status === "TODO"),
-    IN_PROGRESS: tasks.filter(t => t.status === "IN_PROGRESS"),
-    DONE: tasks.filter(t => t.status === "DONE"),
+    TODO: tasks.filter((t) => t.status === "TODO"),
+    IN_PROGRESS: tasks.filter((t) => t.status === "IN_PROGRESS"),
+    DONE: tasks.filter((t) => t.status === "DONE"),
   };
 
-  if (loading) return <div style={{ padding: 32 }}>{[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 60, marginBottom: 12 }} />)}</div>;
+  const priorityBadgeClass = (priority: string) => {
+    switch (priority) {
+      case "HIGH":
+        return "border-[var(--priority-high)]/20 bg-[var(--priority-high-bg)] text-[var(--priority-high)]";
+      case "MEDIUM":
+        return "border-[var(--priority-medium)]/20 bg-[var(--priority-medium-bg)] text-[var(--priority-medium)]";
+      case "LOW":
+        return "border-[var(--priority-low)]/20 bg-[var(--priority-low-bg)] text-[var(--priority-low)]";
+      default:
+        return "";
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-3 p-8">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-[60px]" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-        <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontSize: 28, fontWeight: 800 }}>Tasks</motion.h1>
-        <button className="btn-primary" onClick={() => { setEditingTask(null); setShowModal(true); }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+      {/* Header */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <motion.h1
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-[28px] font-extrabold"
+        >
+          Tasks
+        </motion.h1>
+        <Button
+          className="bg-[#6c5ce7] text-white hover:bg-[#7c6df7]"
+          onClick={() => {
+            setEditingTask(null);
+            setShowModal(true);
+          }}
+        >
+          <Plus className="size-4" />
           New Task
-        </button>
+        </Button>
       </div>
 
       {/* Filters */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
-        <input className="input-field" placeholder="Search tasks..." value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: 260 }} />
-        <select className="select-field" value={filterPriority} onChange={e => setFilterPriority(e.target.value)} style={{ maxWidth: 160 }}>
-          <option value="ALL">All Priorities</option>
-          <option value="HIGH">High</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="LOW">Low</option>
-        </select>
-        <select className="select-field" value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ maxWidth: 160 }}>
-          <option value="ALL">All Statuses</option>
-          <option value="TODO">Todo</option>
-          <option value="IN_PROGRESS">In Progress</option>
-          <option value="DONE">Done</option>
-        </select>
+      <div className="mb-6 flex flex-wrap gap-3">
+        <div className="relative max-w-[260px]">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search tasks..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border-border bg-input pl-9"
+          />
+        </div>
+        <Select value={filterPriority} onValueChange={(val) => val && setFilterPriority(val)}>
+          <SelectTrigger className="w-[160px] border-border bg-input">
+            <SelectValue placeholder="All Priorities" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All Priorities</SelectItem>
+            <SelectItem value="HIGH">High</SelectItem>
+            <SelectItem value="MEDIUM">Medium</SelectItem>
+            <SelectItem value="LOW">Low</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={filterStatus} onValueChange={(val) => val && setFilterStatus(val)}>
+          <SelectTrigger className="w-[160px] border-border bg-input">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All Statuses</SelectItem>
+            <SelectItem value="TODO">Todo</SelectItem>
+            <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+            <SelectItem value="DONE">Done</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Kanban Board */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-        {(["TODO", "IN_PROGRESS", "DONE"] as const).map(col => (
-          <div key={col} className="kanban-column">
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: col === "TODO" ? "var(--status-todo)" : col === "IN_PROGRESS" ? "var(--status-progress)" : "var(--status-done)" }} />
-              <h3 style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                {col === "TODO" ? "To Do" : col === "IN_PROGRESS" ? "In Progress" : "Done"}
-              </h3>
-              <span style={{ fontSize: 12, color: "var(--text-muted)", marginLeft: "auto" }}>{groupedByStatus[col].length}</span>
-            </div>
-            <AnimatePresence>
-              {groupedByStatus[col].map(task => (
-                <motion.div key={task.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="task-card" style={{ marginBottom: 10 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                    <span className={`badge badge-${task.priority.toLowerCase()}`}>{task.priority}</span>
-                    <div style={{ display: "flex", gap: 4 }}>
-                      <button onClick={() => { setEditingTask(task); setShowModal(true); }} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: 4 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-                      </button>
-                      <button onClick={() => handleDelete(task.id)} style={{ background: "none", border: "none", color: "var(--priority-high)", cursor: "pointer", padding: 4, opacity: 0.6 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
-                      </button>
-                    </div>
-                  </div>
-                  <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 6, color: task.status === "DONE" ? "var(--text-muted)" : "var(--text-primary)", textDecoration: task.status === "DONE" ? "line-through" : "none" }}>{task.title}</h4>
-                  {task.description && <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 10, lineHeight: 1.5 }}>{task.description.substring(0, 80)}{task.description.length > 80 ? "..." : ""}</p>}
-                  {task.dueDate && <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>📅 {new Date(task.dueDate).toLocaleDateString()}</p>}
-                  <div style={{ display: "flex", gap: 4 }}>
-                    {col !== "TODO" && <button onClick={() => handleStatusChange(task, col === "IN_PROGRESS" ? "TODO" : "IN_PROGRESS")} style={{ fontSize: 11, padding: "4px 8px", borderRadius: 6, background: "var(--bg-input)", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer" }}>← {col === "DONE" ? "Progress" : "Todo"}</button>}
-                    {col !== "DONE" && <button onClick={() => handleStatusChange(task, col === "TODO" ? "IN_PROGRESS" : "DONE")} style={{ fontSize: 11, padding: "4px 8px", borderRadius: 6, background: "var(--accent-soft)", border: "1px solid rgba(108,92,231,0.2)", color: "var(--accent)", cursor: "pointer" }}>{col === "TODO" ? "Start" : "Complete"} →</button>}
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-            {groupedByStatus[col].length === 0 && <p style={{ fontSize: 13, color: "var(--text-muted)", textAlign: "center", padding: 20 }}>No tasks</p>}
-          </div>
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        {(["TODO", "IN_PROGRESS", "DONE"] as const).map((col) => (
+          <Card
+            key={col}
+            className="min-h-[400px] border-border bg-card/50 backdrop-blur-sm"
+          >
+            <CardContent className="p-5">
+              {/* Column header */}
+              <div className="mb-4 flex items-center gap-2">
+                <div
+                  className="size-2 rounded-full"
+                  style={{
+                    background:
+                      col === "TODO"
+                        ? "var(--status-todo)"
+                        : col === "IN_PROGRESS"
+                          ? "var(--status-progress)"
+                          : "var(--status-done)",
+                  }}
+                />
+                <h3 className="text-sm font-bold uppercase tracking-wide">
+                  {col === "TODO"
+                    ? "To Do"
+                    : col === "IN_PROGRESS"
+                      ? "In Progress"
+                      : "Done"}
+                </h3>
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {groupedByStatus[col].length}
+                </span>
+              </div>
+
+              {/* Task cards */}
+              <AnimatePresence>
+                {groupedByStatus[col].map((task) => (
+                  <motion.div
+                    key={task.id}
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="mb-2.5"
+                  >
+                    <Card className="group cursor-pointer transition-all duration-300 hover:-translate-y-px hover:border-[#6c5ce7]/30 hover:bg-muted/50 hover:shadow-lg hover:shadow-black/20">
+                      <CardContent className="p-5">
+                        {/* Top row */}
+                        <div className="mb-2 flex items-start justify-between">
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] font-semibold uppercase ${priorityBadgeClass(task.priority)}`}
+                          >
+                            {task.priority}
+                          </Badge>
+                          <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              onClick={() => {
+                                setEditingTask(task);
+                                setShowModal(true);
+                              }}
+                            >
+                              <Pencil className="size-3.5 text-muted-foreground" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              onClick={() => handleDelete(task.id)}
+                            >
+                              <Trash2 className="size-3.5 text-destructive opacity-60" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Title */}
+                        <h4
+                          className={`mb-1.5 text-sm font-semibold ${
+                            task.status === "DONE"
+                              ? "text-muted-foreground line-through"
+                              : "text-foreground"
+                          }`}
+                        >
+                          {task.title}
+                        </h4>
+
+                        {/* Description */}
+                        {task.description && (
+                          <p className="mb-2.5 text-xs leading-relaxed text-muted-foreground">
+                            {task.description.substring(0, 80)}
+                            {task.description.length > 80 ? "..." : ""}
+                          </p>
+                        )}
+
+                        {/* Due date */}
+                        {task.dueDate && (
+                          <p className="mb-2.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <Calendar className="size-3" />
+                            {new Date(task.dueDate).toLocaleDateString()}
+                          </p>
+                        )}
+
+                        {/* Status buttons */}
+                        <div className="flex gap-1">
+                          {col !== "TODO" && (
+                            <Button
+                              variant="outline"
+                              size="xs"
+                              onClick={() =>
+                                handleStatusChange(
+                                  task,
+                                  col === "IN_PROGRESS" ? "TODO" : "IN_PROGRESS"
+                                )
+                              }
+                              className="text-[11px]"
+                            >
+                              <ArrowLeft className="size-3" />
+                              {col === "DONE" ? "Progress" : "Todo"}
+                            </Button>
+                          )}
+                          {col !== "DONE" && (
+                            <Button
+                              size="xs"
+                              onClick={() =>
+                                handleStatusChange(
+                                  task,
+                                  col === "TODO" ? "IN_PROGRESS" : "DONE"
+                                )
+                              }
+                              className="bg-[#6c5ce7]/10 text-[11px] text-[#6c5ce7] hover:bg-[#6c5ce7]/20"
+                            >
+                              {col === "TODO" ? "Start" : "Complete"}
+                              <ArrowRight className="size-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {groupedByStatus[col].length === 0 && (
+                <p className="py-5 text-center text-[13px] text-muted-foreground">
+                  No tasks
+                </p>
+              )}
+            </CardContent>
+          </Card>
         ))}
       </div>
 
       {/* Task Modal */}
-      <AnimatePresence>
-        {showModal && <TaskModal task={editingTask} onClose={() => { setShowModal(false); setEditingTask(null); }} onSave={handleSave} />}
-      </AnimatePresence>
-
-      {/* Toast */}
-      <AnimatePresence>
-        {toast && <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className={`toast toast-${toast.type}`}>{toast.message}</motion.div>}
-      </AnimatePresence>
+      <TaskModal
+        open={showModal}
+        task={editingTask}
+        onClose={() => {
+          setShowModal(false);
+          setEditingTask(null);
+        }}
+        onSave={handleSave}
+      />
     </div>
   );
 }
 
-function TaskModal({ task, onClose, onSave }: { task: Task | null; onClose: () => void; onSave: (data: { title: string; description: string; priority: string; status: string; dueDate: string; useAI: boolean }) => void }) {
+function TaskModal({
+  open,
+  task,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  task: Task | null;
+  onClose: () => void;
+  onSave: (data: {
+    title: string;
+    description: string;
+    priority: string;
+    status: string;
+    dueDate: string;
+    useAI: boolean;
+  }) => void;
+}) {
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
   const [priority, setPriority] = useState(task?.priority || "MEDIUM");
   const [taskStatus, setTaskStatus] = useState(task?.status || "TODO");
-  const [dueDate, setDueDate] = useState(task?.dueDate ? task.dueDate.split("T")[0] : "");
+  const [dueDate, setDueDate] = useState(
+    task?.dueDate ? task.dueDate.split("T")[0] : ""
+  );
   const [useAI, setUseAI] = useState(!task);
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiSuggestion, setAiSuggestion] = useState<{ priority: string; reasoning: string } | null>(null);
+  const [aiSuggestion, setAiSuggestion] = useState<{
+    priority: string;
+    reasoning: string;
+  } | null>(null);
+
+  // Reset form when dialog opens with new task
+  useEffect(() => {
+    setTitle(task?.title || "");
+    setDescription(task?.description || "");
+    setPriority(task?.priority || "MEDIUM");
+    setTaskStatus(task?.status || "TODO");
+    setDueDate(task?.dueDate ? task.dueDate.split("T")[0] : "");
+    setUseAI(!task);
+    setAiSuggestion(null);
+  }, [task, open]);
 
   const handleAISuggest = async () => {
     if (!title) return;
     setAiLoading(true);
     try {
-      const res = await fetch("/api/ai/suggest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, description }) });
+      const res = await fetch("/api/ai/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description }),
+      });
       if (res.ok) {
         const data = await res.json();
         setAiSuggestion(data);
         setPriority(data.priority);
       }
-    } catch (e) { console.error(e); }
-    finally { setAiLoading(false); }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const priorityBadgeClass = (p: string) => {
+    switch (p) {
+      case "HIGH":
+        return "border-[var(--priority-high)]/20 bg-[var(--priority-high-bg)] text-[var(--priority-high)]";
+      case "MEDIUM":
+        return "border-[var(--priority-medium)]/20 bg-[var(--priority-medium-bg)] text-[var(--priority-medium)]";
+      case "LOW":
+        return "border-[var(--priority-low)]/20 bg-[var(--priority-low-bg)] text-[var(--priority-low)]";
+      default:
+        return "";
+    }
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="modal-overlay" onClick={onClose}>
-      <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="modal-content" style={{ padding: 32 }} onClick={e => e.stopPropagation()}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700 }}>{task ? "Edit Task" : "Create Task"}</h2>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 20 }}>✕</button>
-        </div>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-[520px] border-border bg-card">
+        <DialogHeader>
+          <DialogTitle>
+            {task ? "Edit Task" : "Create Task"}
+          </DialogTitle>
+        </DialogHeader>
 
-        <div style={{ marginBottom: 20 }}>
-          <label className="form-label">Title *</label>
-          <input className="input-field" placeholder="What needs to be done?" value={title} onChange={e => setTitle(e.target.value)} required />
-        </div>
+        <div className="space-y-5">
+          {/* Title */}
+          <div className="space-y-1.5">
+            <Label>Title *</Label>
+            <Input
+              placeholder="What needs to be done?"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              className="border-border bg-input"
+            />
+          </div>
 
-        <div style={{ marginBottom: 20 }}>
-          <label className="form-label">Description</label>
-          <textarea className="input-field" placeholder="Add details..." value={description} onChange={e => setDescription(e.target.value)} rows={3} />
-        </div>
+          {/* Description */}
+          <div className="space-y-1.5">
+            <Label>Description</Label>
+            <Textarea
+              placeholder="Add details..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="border-border bg-input"
+            />
+          </div>
 
-        {/* AI Priority */}
-        {!task && (
-          <div style={{ marginBottom: 20, padding: 16, background: "var(--accent-soft)", borderRadius: 12, border: "1px solid rgba(108,92,231,0.2)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span className="ai-sparkle">🤖</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--accent)" }}>AI Priority Suggestion</span>
-              </div>
-              <div className={`toggle-switch ${useAI ? "active" : ""}`} onClick={() => setUseAI(!useAI)} />
-            </div>
-            {useAI && (
-              <div>
-                <button className="btn-secondary" onClick={handleAISuggest} disabled={!title || aiLoading} style={{ fontSize: 12, padding: "6px 14px", opacity: !title || aiLoading ? 0.5 : 1 }}>
-                  {aiLoading ? "Analyzing..." : "✨ Analyze Task"}
-                </button>
-                {aiSuggestion && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginTop: 10, fontSize: 12, color: "var(--text-secondary)" }}>
-                    Suggested <span className={`badge badge-${aiSuggestion.priority.toLowerCase()}`}>{aiSuggestion.priority}</span> — {aiSuggestion.reasoning}
-                  </motion.div>
+          {/* AI Priority */}
+          {!task && (
+            <Card className="border-[#6c5ce7]/20 bg-[#6c5ce7]/5">
+              <CardContent className="p-4">
+                <div className="mb-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bot className="ai-sparkle size-4 text-[#6c5ce7]" />
+                    <span className="text-[13px] font-semibold text-[#6c5ce7]">
+                      AI Priority Suggestion
+                    </span>
+                  </div>
+                  <Switch checked={useAI} onCheckedChange={setUseAI} />
+                </div>
+                {useAI && (
+                  <div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAISuggest}
+                      disabled={!title || aiLoading}
+                      className="text-xs"
+                    >
+                      {aiLoading ? (
+                        <>
+                          <Loader2 className="size-3 animate-spin" />
+                          Analyzing...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="size-3" />
+                          Analyze Task
+                        </>
+                      )}
+                    </Button>
+                    {aiSuggestion && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="mt-2.5 text-xs text-muted-foreground"
+                      >
+                        Suggested{" "}
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] font-semibold uppercase ${priorityBadgeClass(aiSuggestion.priority)}`}
+                        >
+                          {aiSuggestion.priority}
+                        </Badge>{" "}
+                        — {aiSuggestion.reasoning}
+                      </motion.div>
+                    )}
+                  </div>
                 )}
-              </div>
-            )}
-          </div>
-        )}
+              </CardContent>
+            </Card>
+          )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-          <div>
-            <label className="form-label">Priority</label>
-            <select className="select-field" value={priority} onChange={e => setPriority(e.target.value)}>
-              <option value="HIGH">🔴 High</option>
-              <option value="MEDIUM">🟡 Medium</option>
-              <option value="LOW">🟢 Low</option>
-            </select>
+          {/* Priority & Status */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Priority</Label>
+              <Select value={priority} onValueChange={(val) => val && setPriority(val)}>
+                <SelectTrigger className="border-border bg-input">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="HIGH">🔴 High</SelectItem>
+                  <SelectItem value="MEDIUM">🟡 Medium</SelectItem>
+                  <SelectItem value="LOW">🟢 Low</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Status</Label>
+              <Select value={taskStatus} onValueChange={(val) => val && setTaskStatus(val)}>
+                <SelectTrigger className="border-border bg-input">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="TODO">To Do</SelectItem>
+                  <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                  <SelectItem value="DONE">Done</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div>
-            <label className="form-label">Status</label>
-            <select className="select-field" value={taskStatus} onChange={e => setTaskStatus(e.target.value)}>
-              <option value="TODO">To Do</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="DONE">Done</option>
-            </select>
+
+          {/* Due Date */}
+          <div className="space-y-1.5">
+            <Label>Due Date</Label>
+            <Input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="border-border bg-input"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-[#6c5ce7] text-white hover:bg-[#7c6df7]"
+              onClick={() =>
+                onSave({
+                  title,
+                  description,
+                  priority,
+                  status: taskStatus,
+                  dueDate,
+                  useAI,
+                })
+              }
+              disabled={!title}
+            >
+              {task ? "Update Task" : "Create Task"}
+            </Button>
           </div>
         </div>
-
-        <div style={{ marginBottom: 28 }}>
-          <label className="form-label">Due Date</label>
-          <input type="date" className="input-field" value={dueDate} onChange={e => setDueDate(e.target.value)} />
-        </div>
-
-        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-          <button className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn-primary" onClick={() => onSave({ title, description, priority, status: taskStatus, dueDate, useAI })} disabled={!title}>{task ? "Update Task" : "Create Task"}</button>
-        </div>
-      </motion.div>
-    </motion.div>
+      </DialogContent>
+    </Dialog>
   );
 }
