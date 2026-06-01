@@ -22,7 +22,7 @@ const features = [
     icon: <Layers className="size-5" />,
     title: "AI Priority Suggestions",
     description:
-      "YandexGPT analyzes your tasks and automatically suggests optimal priority levels — High, Medium, or Low.",
+      "AI analyzes your tasks and automatically suggests optimal priority levels — High, Medium, or Low.",
   },
   {
     icon: <LayoutGrid className="size-5" />,
@@ -120,7 +120,7 @@ export default function LandingPage() {
             className="mb-8 gap-2 border-[#6c5ce7]/20 bg-[#6c5ce7]/10 px-4 py-2 text-[13px] font-medium text-[#6c5ce7]"
           >
             <Sparkles className="ai-sparkle size-3.5" />
-            Powered by YandexGPT
+            Powered by AI
           </Badge>
         </motion.div>
 
@@ -320,7 +320,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="relative z-[1] flex items-center justify-between border-t border-border px-6 py-8 text-[13px] text-muted-foreground md:px-10">
         <span>© 2026 TaskFlow AI. All rights reserved.</span>
-        <span>Built with Next.js + YandexGPT</span>
+        <span>Built with Next.js + AI</span>
       </footer>
     </div>
   );

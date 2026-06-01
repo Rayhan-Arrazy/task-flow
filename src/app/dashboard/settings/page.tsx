@@ -14,7 +14,7 @@ const techStack = [
   ["Styling", "shadcn/ui"],
   ["Database", "PostgreSQL"],
   ["ORM", "Prisma"],
-  ["AI", "YandexGPT"],
+  ["AI", "Gemini"],
   ["Auth", "NextAuth.js v5"],
   ["Deploy", "Vercel + Railway"],
 ];
@@ -85,7 +85,7 @@ export default function SettingsPage() {
           <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-[#6c5ce7] via-[#a855f7] to-[#6366f1] opacity-0 transition-opacity group-hover:opacity-100" />
           <CardHeader>
             <CardTitle className="text-base">
-              YandexGPT Integration
+              AI Integration
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -95,9 +95,7 @@ export default function SettingsPage() {
             </p>
             <div className="rounded-[10px] border border-border bg-input p-4">
               <code className="text-xs text-[#6c5ce7]">
-                YANDEX_API_KEY=your-api-key
-                <br />
-                YANDEX_FOLDER_ID=your-folder-id
+                GEMINI_API_KEY=your-api-key
               </code>
             </div>
             <p className="mt-2.5 text-xs text-muted-foreground">

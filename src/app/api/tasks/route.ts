@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { suggestPriority } from "@/lib/yandex-gpt";
+import { suggestPriority } from "@/lib/gemini";
 
 // GET all tasks for the authenticated user
 export async function GET(req: NextRequest) {

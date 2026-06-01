@@ -26,11 +26,13 @@ import {
   LogOut,
   Menu,
   Zap,
+  MessageSquare,
 } from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
   { label: "Tasks", href: "/dashboard/tasks", icon: CheckSquare },
+  { label: "AI Chat", href: "/dashboard/chat", icon: MessageSquare },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 

@@ -11,12 +11,10 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 export const metadata: Metadata = {
   title: "TaskFlow AI — Smart Task Management",
   description:
-    "AI-powered task management platform. Create tasks and let YandexGPT automatically suggest priority levels. Stay organized, stay productive.",
+    "AI-powered task management platform. Create tasks and let AI automatically suggest priority levels. Stay organized, stay productive.",
   keywords: [
     "task management",
     "AI",
-    "productivity",
-    "YandexGPT",
     "project management",
   ],
   authors: [{ name: "TaskFlow AI" }],

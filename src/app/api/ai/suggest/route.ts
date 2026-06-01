@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { suggestPriority } from "@/lib/yandex-gpt";
+import { suggestPriority } from "@/lib/gemini";
 
 export async function POST(req: NextRequest) {
   try {
