@@ -1,6 +1,6 @@
 # ⚡ TaskFlow AI
 
-**AI-powered task management platform** — Create tasks and let YandexGPT automatically suggest priority levels (High/Medium/Low).
+**AI-powered task management platform** — Create tasks and let Gemini AI automatically suggest priority levels (High/Medium/Low).
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
@@ -10,7 +10,7 @@
 
 ## ✨ Features
 
-- **🤖 AI Priority Suggestions** — YandexGPT analyzes task content and suggests optimal priority levels
+- **🤖 AI Priority Suggestions** — Gemini AI analyzes task content and suggests optimal priority levels
 - **📋 Kanban Board** — Visual task management with Todo/In Progress/Done columns
 - **📊 Dashboard Analytics** — Completion rates, priority distribution, and stat cards
 - **🔐 Authentication** — Secure sign-up/login with NextAuth.js v5 & bcrypt
@@ -27,7 +27,7 @@
 | Styling | Tailwind CSS v4 |
 | Database | PostgreSQL |
 | ORM | Prisma 7 |
-| AI | YandexGPT API |
+| AI | Gemini API |
 | Auth | NextAuth.js v5 |
 | Animations | Framer Motion |
 | Deploy | Vercel + Railway |
@@ -59,11 +59,10 @@ Edit `.env` with your values:
 DATABASE_URL="postgresql://user:password@host:port/dbname"
 AUTH_SECRET="generate-with-openssl-rand-base64-32"
 AUTH_URL="http://localhost:3000"
-YANDEX_API_KEY="your-yandex-api-key"       # Optional
-YANDEX_FOLDER_ID="your-yandex-folder-id"   # Optional
+GEMINI_API_KEY="your-gemini-api-key"       # Optional
 ```
 
-> **Note:** YandexGPT is optional. Without API keys, the app uses a built-in keyword-based priority engine.
+> **Note:** Gemini AI is optional. Without API keys, the app uses a built-in keyword-based priority engine.
 
 ### 3. Set Up Database
 
@@ -103,7 +102,7 @@ src/
 ├── lib/
 │   ├── auth.ts                  # NextAuth configuration
 │   ├── prisma.ts                # Prisma client singleton
-│   └── yandex-gpt.ts            # YandexGPT integration
+│   └── gemini.ts                # Gemini AI integration
 ├── middleware.ts                 # Route protection
 └── providers.tsx                 # Session provider
 ```
