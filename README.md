@@ -1,6 +1,6 @@
 # ⚡ TaskFlow AI
 
-**AI-powered task management platform** — Create tasks and let YandexGPT automatically suggest priority levels (High/Medium/Low).
+**AI-powered task management platform** — Create tasks and let Gemini AI automatically suggest priority levels (High/Medium/Low).
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
@@ -10,7 +10,7 @@
 
 ## ✨ Features
 
-- **🤖 AI Priority Suggestions** — YandexGPT analyzes task content and suggests optimal priority levels
+- **🤖 AI Priority Suggestions** — Gemini AI analyzes task content and suggests optimal priority levels
 - **📋 Kanban Board** — Visual task management with Todo/In Progress/Done columns
 - **📊 Dashboard Analytics** — Completion rates, priority distribution, and stat cards
 - **🔐 Authentication** — Secure sign-up/login with NextAuth.js v5 & bcrypt
@@ -27,57 +27,23 @@
 | Styling | Tailwind CSS v4 |
 | Database | PostgreSQL |
 | ORM | Prisma 7 |
-| AI | YandexGPT API |
+| AI | Gemini API |
 | Auth | NextAuth.js v5 |
 | Animations | Framer Motion |
 | Deploy | Vercel + Railway |
 
-## 🚀 Getting Started
+## 💡 How It Works
 
-### Prerequisites
+1. **Create a Task**: Simply describe what needs to be done.
+2. **Let AI Decide**: Gemini AI evaluates your task description and determines if it's High, Medium, or Low priority based on urgency and context.
+3. **Track Progress**: Your task lands on the interactive Kanban board. Drag or click to move it from "To Do" to "In Progress" and finally "Done".
+4. **Monitor Analytics**: Head over to the dashboard to see your completion rates and productivity metrics over time.
 
-- Node.js 18+
-- PostgreSQL database (local or [Railway](https://railway.app))
+## 🎯 Use Cases
 
-### 1. Clone & Install
-
-```bash
-git clone <your-repo-url>
-cd TaskFlow-AI
-npm install
-```
-
-### 2. Configure Environment
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your values:
-
-```env
-DATABASE_URL="postgresql://user:password@host:port/dbname"
-AUTH_SECRET="generate-with-openssl-rand-base64-32"
-AUTH_URL="http://localhost:3000"
-YANDEX_API_KEY="your-yandex-api-key"       # Optional
-YANDEX_FOLDER_ID="your-yandex-folder-id"   # Optional
-```
-
-> **Note:** YandexGPT is optional. Without API keys, the app uses a built-in keyword-based priority engine.
-
-### 3. Set Up Database
-
-```bash
-npx prisma migrate dev --name init
-```
-
-### 4. Run Development Server
-
-```bash
-npm run dev
-```
-
-Visit [http://localhost:3000](http://localhost:3000)
+- **Freelancers**: Manage client projects and prioritize immediate deadlines automatically.
+- **Students**: Keep track of assignments and let the AI highlight what needs to be studied first.
+- **Small Teams**: Organize sprints and daily tasks with a beautiful, shared workspace.
 
 ## 📁 Project Structure
 
@@ -103,26 +69,8 @@ src/
 ├── lib/
 │   ├── auth.ts                  # NextAuth configuration
 │   ├── prisma.ts                # Prisma client singleton
-│   └── yandex-gpt.ts            # YandexGPT integration
+│   └── gemini.ts                # Gemini AI integration
 ├── middleware.ts                 # Route protection
 └── providers.tsx                 # Session provider
 ```
 
-## 🚢 Deployment
-
-### Vercel (Frontend + API)
-
-1. Push to GitHub
-2. Import in [Vercel](https://vercel.com)
-3. Add environment variables
-4. Deploy
-
-### Railway (Database)
-
-1. Create PostgreSQL on [Railway](https://railway.app)
-2. Copy the connection string to `DATABASE_URL`
-3. Run `npx prisma migrate deploy`
-
-## 📄 License
-
-MIT
